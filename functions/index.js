@@ -28,7 +28,7 @@ exports.webHook = functions.https.onRequest(async (req, res) => {
       await userRef.set({ state: 'normal' });
       await client.replyMessage(events.replyToken, {
         type: 'text',
-        text: 'はじめまして！新規リストを作成するには、「新規作成」と入力してください。',
+        text: 'はじめまして！まずは「新規作成」と入力してリストを作成しましょう!',
       });
     } else {
       // 既存ユーザーの場合
@@ -41,7 +41,7 @@ exports.webHook = functions.https.onRequest(async (req, res) => {
               await userRef.update({ state: 'waiting_for_list_name' });
               await client.replyMessage(events.replyToken, {
                 type: 'text',
-                text: 'リスト名を入力してください。',
+                text: 'リスト名を入力してください。キャンセルもできます',
               });
               break;
             case 'データ入力':
@@ -63,6 +63,26 @@ exports.webHook = functions.https.onRequest(async (req, res) => {
           break;
         case 'waiting_for_list_name':
           // リスト名の入力待ちモードの処理を追加
+          if (userMessage === 'キャンセル') {
+            await userRef.update({ state: 'normal' });
+            await client.replyMessage(events.replyToken, {
+              type: 'text',
+              text: 'リスト作成がキャンセルされました。通常モードに戻ります。',
+            });
+          } else {
+            const listId = userRef.collection('lists').doc().id;
+            await userRef.collection('lists').doc(listId).set({
+              listId: listId,
+              listName: userMessage,
+              timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              data: []  // リストデータの配列を初期化
+            });
+            await userRef.update({ state: 'normal' });
+            await client.replyMessage(events.replyToken, {
+              type: 'text',
+              text: `リスト「${userMessage}」が作成されました。通常モードに戻ります。`,
+            });
+          }
           break;
         case 'waiting_for_data_input':
           // データ入力待ちモードの処理を追加
