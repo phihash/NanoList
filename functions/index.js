@@ -24,15 +24,11 @@ exports.webHook = functions.https.onRequest(async (req, res) => {
     const userDoc = await userRef.get();
 
     if (!userDoc.exists) {
-      // 新規ユーザーの場合
+      // ユーザーが存在しない場合、新規作成し、状態をnormalに設定
       await userRef.set({ state: 'normal' });
-      await client.replyMessage(events.replyToken, {
-        type: 'text',
-        text: 'はじめまして！まずは「新規作成」と入力してリストを作成しましょう!',
-      });
-    } else {
-      // 既存ユーザーの場合
-      const userData = userDoc.data();
+    }
+
+    const userData = (await userRef.get()).data();
 
       switch (userData.state) {
         case 'normal':
@@ -94,7 +90,6 @@ exports.webHook = functions.https.onRequest(async (req, res) => {
             text: 'エラーが発生しました。通常モードに戻ります。',
           });
           break;
-      }
     }
 
     res.status(200).send();
