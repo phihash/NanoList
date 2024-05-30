@@ -21,18 +21,17 @@ exports.webHook = functions.https.onRequest(async (req, res) => {
   const userId = events.source.userId;
   const userMessage = events.message.text;
 
-  try{
-    const userRef = db.collection("users").doc(userId);
+  try {
+    const userRef = db.collection('users').doc(userId);
 
-    await userRef.collection("messages").add({
-      message:userMessage,
-      timestamp: admin.firestore.FieldValue.serverTimestamp()
-    })
-  }catch(error) {
+    await userRef.collection('messages').add({
+      message: userMessage,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (error) {
     console.error('Error processing webhook:', error);
     res.status(500).send();
   }
-
 
   res.status(200).send();
 });
